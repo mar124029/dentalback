@@ -1,20 +1,31 @@
 #!/bin/bash
 
+# Log de inicio
+echo "[INFO] Startup script comenzando..." >> /home/site/wwwroot/startup.log
+
+# Navegar al directorio del proyecto
 cd /home/site/wwwroot
 
-# Instala dependencias PHP
+# Asegurar que el archivo tenga formato Unix (por si fue creado en Windows)
+dos2unix /home/site/wwwroot/azure/startup.sh
+
+# Instalar dependencias PHP sin las de desarrollo
 composer install --no-dev --optimize-autoloader
 
-# Dar permisos a Laravel
+# Asignar permisos necesarios para Laravel
 chmod -R 775 storage bootstrap/cache
 
-# Cachear configuración
+# Cachear configuración de Laravel
+php artisan config:clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Iniciar servicios necesarios
+# Iniciar el servicio PHP-FPM
 service php8.2-fpm start
 
-# Iniciar NGINX usando la configuración personalizada
+# Log antes de iniciar NGINX
+echo "[INFO] Iniciando nginx personalizado" >> /home/site/wwwroot/startup.log
+
+# Iniciar nginx con la configuración personalizada
 nginx -c /home/site/wwwroot/azure/nginx.conf -g "daemon off;"
